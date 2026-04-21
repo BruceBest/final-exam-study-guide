@@ -1,0 +1,267 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{multicol}
+
+\geometry{a4paper, margin=0.75in}
+\hypersetup{colorlinks=true, linkcolor=blue!70!black, urlcolor=blue}
+
+\title{\textbf{EECS 498/598-016 Final Exam Study Guide}\\
+\large{Winter 2026 - Conceptual Reference}}
+\author{Based on Lecture Slides + Exam Prep}
+\date{\today}
+
+\begin{document}
+\maketitle
+\vspace{-1em}
+
+\begin{abstract}
+\noindent Exam format: 70 minutes, closed-note, 6 questions. Focus on understanding core concepts, not proofs, programming, or complex equations.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Rasterization}
+\subsection{Transformations \& Projections}
+\begin{itemize}
+    \item \textbf{Homogeneous Coordinates}: Enable translation to be represented as matrix multiplication (same as rotation/scaling). 2D points become $(x, y, 1)$, allowing any affine transform to use a $3\times3$ matrix.
+    \item \textbf{Composition}: Chain transforms via matrix multiplication. Order matters (non-commutative: $M_1 M_2 \neq M_2 M_1$).
+    \item \textbf{Viewing Transform}: Camera matrix positions/orients the world relative to viewer.
+    \item \textbf{Projection}: 
+    \begin{itemize}
+        \item \textit{Orthographic}: Parallel projection, preserves relative sizes.
+        \item \textit{Perspective}: Converging lines (foreshortening), mimics human eye. Uses frustum and division by $z$ (or $w$).
+    \end{itemize}
+\end{itemize}
+
+\subsection{Barycentric Coordinates}
+\begin{itemize}
+    \item Represent any point inside a triangle as a weighted sum of its vertices: $P = \alpha A + \beta B + \gamma C$, where $\alpha+\beta+\gamma=1$.
+    \item Point is inside triangle iff $\alpha, \beta, \gamma \in [0, 1]$.
+    \item Used for \textbf{interpolation}: smoothly blend vertex attributes (color, normals, texture coordinates) across the triangle surface.
+\end{itemize}
+
+\subsection{Blinn-Phong Shading}
+Empirical local illumination model with three components:
+\begin{itemize}
+    \item \textbf{Diffuse}: Surface scatters light equally in all directions. Depends on angle between light direction $\vec{L}$ and surface normal $\vec{N}$: $\max(0, \vec{N} \cdot \vec{L})$.
+    \item \textbf{Specular}: Shiny highlights. Depends on view direction and reflected light direction. \textit{Blinn} variant uses the \textbf{halfway vector} $\vec{H} = \frac{\vec{L}+\vec{V}}{\|\vec{L}+\vec{V}\|}$, computing $\max(0, \vec{N} \cdot \vec{H})^n$. More efficient than original Phong.
+    \item \textbf{Ambient}: Constant baseline lighting to simulate indirect/global illumination.
+\end{itemize}
+
+\subsection{Anti-Aliasing}
+\begin{itemize}
+    \item \textbf{Problem}: Jaggies/staircase artifacts from undersampling high-frequency edges.
+    \item \textbf{SSAA (Supersampling)}: Render at higher resolution, then downsample. Computationally expensive.
+    \item \textbf{MSAA (Multisampling)}: Sample multiple points per pixel but only compute shading once per polygon. More efficient.
+    \item \textbf{Concept}: Low-pass filter high frequencies before sampling (Nyquist-Shannon).
+\end{itemize}
+
+\subsection{Depth Buffer (Z-Buffer)}
+\begin{itemize}
+    \item For each pixel, store the depth ($z$) of the closest fragment seen so far.
+    \item When rendering a new fragment, compare its $z$ with the buffer. Only update if new $z$ is closer.
+    \item Solves visibility problem efficiently, order-independent.
+\end{itemize}
+
+\subsection{Texturing}
+\begin{itemize}
+    \item Map 2D image (texture) onto 3D surface using UV coordinates.
+    \item \textbf{Mipmapping}: Precompute downsampled texture versions. Sample from appropriate level based on distance/footprint to avoid aliasing.
+    \item \textbf{Filtering}: Bilinear (interpolates 4 nearest pixels), trilinear (adds mip-level interpolation), anisotropic (handles oblique viewing angles).
+\end{itemize}
+
+\section{Ray Tracing}
+\subsection{The Rendering Equation}
+\[
+L_o(\mathbf{x}, \omega_o) = L_e(\mathbf{x}, \omega_o) + \int_{\Omega} f_r(\mathbf{x}, \omega_i, \omega_o) L_i(\mathbf{x}, \omega_i) (\mathbf{n} \cdot \omega_i) \, d\omega_i
+\]
+\begin{itemize}
+    \item Describes light leaving a point in direction $\omega_o$ as sum of emitted light + reflected light from all incoming directions.
+    \item \textbf{Integral}: Requires evaluating contributions from infinitely many directions $\Rightarrow$ solved via Monte Carlo sampling in practice.
+    \item Recursive in nature: $L_i$ itself depends on light leaving other surfaces.
+\end{itemize}
+
+\subsection{Recursive Ray Tracing}
+\begin{itemize}
+    \item Primary rays from camera $\rightarrow$ first hit point.
+    \item At each hit, spawn \textbf{reflection rays}, \textbf{refraction rays}, and \textbf{shadow rays} toward lights.
+    \item Combine contributions weighted by material properties (reflectivity, transparency).
+    \item Stop recursion at max depth or when contribution falls below threshold.
+    \item Captures global illumination effects: soft shadows, caustics, color bleeding, interreflections.
+\end{itemize}
+
+\subsection{Acceleration Structures}
+Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
+\begin{itemize}
+    \item \textbf{BVH (Bounding Volume Hierarchy)}: Tree structure where each node bounds a subset of geometry with a bounding box. Traverse tree; skip volumes that ray doesn't intersect.
+    \item \textbf{Spatial Partitioning}: Divide space into uniform grid or octree. Only test objects in cells the ray passes through.
+    \item \textbf{Trade-off}: BVH adapts to geometry density (tight bounds), grids are simpler but may have empty/overfilled cells.
+\end{itemize}
+
+\subsection{Light Units \& BRDF}
+\begin{itemize}
+    \item \textbf{Radiance ($L$)}: Power per unit area per unit solid angle. What cameras/eyes measure. Constant along a ray in vacuum.
+    \item \textbf{Irradiance ($E$)}: Power per unit area arriving at a surface. Integral of incoming radiance.
+    \item \textbf{BRDF (Bidirectional Reflectance Distribution Function)}: $f_r(\omega_i, \omega_o)$ describes how much light from direction $\omega_i$ reflects toward $\omega_o$.
+    \begin{itemize}
+        \item Must satisfy \textbf{Helmholtz reciprocity}: $f_r(\omega_i, \omega_o) = f_r(\omega_o, \omega_i)$.
+        \item Must be \textbf{energy conserving}: reflected energy $\leq$ incoming energy.
+    \end{itemize}
+\end{itemize}
+
+\section{Geometry \& Representations}
+\subsection{3D Representations Comparison}
+\begin{itemize}
+    \item \textbf{Depth Maps}: 2D array storing distance from camera per pixel. Easy to capture (RGB-D cameras) but only captures visible surfaces from one viewpoint.
+    \item \textbf{Point Clouds}: Unordered set of $(x,y,z)$ points. Flexible, memory-efficient for sparse data. No surface connectivity; hard to render smoothly.
+    \item \textbf{Meshes}: Vertices + edges + faces (usually triangles). Standard for rendering/modeling. Handles topology well. Fixed resolution; hard to represent fine details without many triangles.
+    \item \textbf{Parametric Surfaces}: Defined by mathematical functions (e.g., Bézier, NURBS). Smooth, compact, resolution-independent. Limited to simple topologies.
+    \item \textbf{Voxels}: 3D grid of volume elements. Simple, supports boolean operations. Memory intensive ($O(n^3)$), blocky at low resolution.
+    \item \textbf{Implicit Surfaces}: Defined by $f(x,y,z)=0$ (e.g., SDFs). Smooth, topology-agnostic, easy to merge. Hard to edit directly; requires marching cubes to extract mesh.
+    \item \textbf{Density Fields}: Assign probability/density $\sigma(x,y,z)$ at each point. Foundation for NeRF/volume rendering. Infinite resolution but requires sampling to render.
+\end{itemize}
+
+\subsection{Bézier Curves \& Surfaces}
+\begin{itemize}
+    \item \textbf{Curve}: $P(t) = \sum_{i=0}^n B_{i,n}(t) P_i$, where $B_{i,n}$ are Bernstein polynomials.
+    \item Defined by \textbf{control points}. Curve stays within convex hull of control points.
+    \item \textbf{Properties}: Smooth, interpolates endpoints, tangent to first/last control segments.
+    \item \textbf{Surfaces}: Tensor product of two Bézier curves. Used in modeling (e.g., car bodies, character design).
+\end{itemize}
+
+\section{Reconstruction}
+\subsection{Sparse vs. Dense Reconstruction}
+\begin{itemize}
+    \item \textbf{Sparse}: Recover 3D positions of a \textbf{small set} of distinctive feature points. Fast, used for camera pose estimation and SfM (Structure from Motion).
+    \item \textbf{Dense}: Recover 3D geometry for \textbf{every pixel/voxel}. Produces detailed surfaces/meshes. Computationally heavy. Used in MVS, NeRF.
+\end{itemize}
+
+\subsection{Camera Calibration}
+\begin{itemize}
+    \item \textbf{Goal}: Determine intrinsic parameters (focal length, principal point, skew) and extrinsic parameters (rotation, translation relative to world).
+    \item Maps 3D world points to 2D image pixels: $\mathbf{x} = K [R | t] \mathbf{X}$.
+    \item Essential for metric reconstruction (true scale/shape) vs. projective reconstruction.
+\end{itemize}
+
+\subsection{Epipolar Geometry}
+\begin{itemize}
+    \item Geometry between two views of the same scene.
+    \item \textbf{Epipolar constraint}: A point in one image constrains its match in the other image to lie on a line (the \textbf{epipolar line}).
+    \item Reduces 2D search to 1D search for correspondence.
+    \item Encoded in the \textbf{Essential Matrix} (calibrated) or \textbf{Fundamental Matrix} (uncalibrated).
+\end{itemize}
+
+\subsection{Eight-Point Algorithm}
+\begin{itemize}
+    \item Computes the Fundamental/Essential matrix from $\geq 8$ corresponding point pairs.
+    \item Linear method: solve homogeneous system $A\mathbf{f} = 0$ via SVD.
+    \item \textbf{Key assumption}: Point correspondences are accurate. Sensitive to noise/outliers (often combined with RANSAC).
+\end{itemize}
+
+\subsection{Feature Matching \& Multi-View Stereo (MVS)}
+\begin{itemize}
+    \item \textbf{Feature Matching}: Detect keypoints (SIFT, ORB) across images, match descriptors. Used to establish correspondences for SfM/MVS.
+    \item \textbf{MVS}: Given calibrated camera poses, fuse information from multiple views to estimate dense depth/surface.
+    \item \textbf{Limits of MVS}: Struggles with textureless surfaces, specular/reflective materials, occlusions, and moving objects. Computationally expensive.
+\end{itemize}
+
+\section{Neural Fields}
+\subsection{Core Concept \& Benefits}
+\begin{itemize}
+    \item \textbf{Definition}: Neural network parameterizes a continuous field (e.g., color, density) over spatial coordinates: $F_\theta(\mathbf{x}) \rightarrow \mathbb{R}$.
+    \item \textbf{Benefits}: (1) \textit{Resolution-free}: query at arbitrary precision. (2) \textit{Compact}: millions of points stored in MBs of weights. (3) \textit{Differentiable}: enable end-to-end gradient-based optimization.
+    \item \textbf{Drawback}: Slow training/inference due to per-point MLP evaluations.
+\end{itemize}
+
+\subsection{SDFs \& Marching Cubes}
+\begin{itemize}
+    \item \textbf{SDF (Signed Distance Function)}: $f(\mathbf{x})$ returns shortest distance to surface (positive outside, negative inside, zero on boundary).
+    \item \textbf{Marching Cubes}: Algorithm to extract triangle mesh from volumetric data (like SDF). Divides space into cubes, checks sign at vertices, interpolates edge intersections, generates triangles.
+\end{itemize}
+
+\subsection{NeRF \& Volume Rendering}
+\begin{itemize}
+    \item \textbf{NeRF}: Maps $(x,y,z,\theta,\phi) \rightarrow (RGB, \sigma)$ via MLP.
+    \item \textbf{Volume Rendering}: Composite color along ray: $C = \sum_{i=1}^N T_i \alpha_i \mathbf{c}_i$, where $T_i = \prod_{j=1}^{i-1} (1-\alpha_j)$ is transmittance (occlusion).
+    \item \textbf{Density $\sigma$ over opacity $\alpha$}: $\sigma$ is a continuous property independent of sampling step $\delta_i$. $\alpha_i = 1 - \exp(-\sigma_i \delta_i)$. Allows consistent rendering across different sampling rates.
+    \item \textbf{Importance Sampling}: Coarse network predicts density distribution $\rightarrow$ fine network samples more densely near surfaces (high density regions). Improves detail without extra compute.
+\end{itemize}
+
+\subsection{Positional Encoding}
+\begin{itemize}
+    \item \textbf{Problem}: MLPs struggle to learn high-frequency details (spectral bias).
+    \item \textbf{Solution}: Map input coordinates $\mathbf{x}$ to higher-dimensional space using sinusoidal functions: $\gamma(\mathbf{x}) = [\sin(2^0 \pi \mathbf{x}), \cos(2^0 \pi \mathbf{x}), \dots, \sin(2^{L-1} \pi \mathbf{x}), \cos(2^{L-1} \pi \mathbf{x})]$.
+    \item Enables network to represent fine spatial variations.
+\end{itemize}
+
+\subsection{Gaussian Splatting}
+\begin{itemize}
+    \item Represents scene as a set of 3D Gaussians (position, covariance, opacity, color).
+    \item \textbf{Rendering}: Project Gaussians to 2D, sort by depth, alpha-blend. Extremely fast ($>100$ FPS) because it's rasterization-based, not MLP-based.
+    \item Trained via differentiable rendering, similar to NeRF but much faster inference.
+\end{itemize}
+
+\subsection{Dynamic Scenes \& Flow Fields}
+\begin{itemize}
+    \item \textbf{Challenge}: NeRF assumes static scene. Real world has motion.
+    \item \textbf{Approach}: Add time $t$ as input to network: $F_\theta(\mathbf{x}, t)$. Or model motion with deformation fields / flow vectors that warp a canonical space over time.
+    \item \textbf{Flow Fields}: Predict per-point velocity/displacement to handle non-rigid motion, enabling 4D reconstruction.
+\end{itemize}
+
+\section{Generative Models}
+\subsection{Discriminative vs. Generative}
+\begin{itemize}
+    \item \textbf{Discriminative}: Learns boundary between classes. Models $P(y|x)$ (given input, predict label). E.g., classifiers, segmentation networks.
+    \item \textbf{Generative}: Learns data distribution to create new samples. Models $P(x)$ or $P(x|y)$. E.g., VAEs, GANs, Diffusion models.
+\end{itemize}
+
+\subsection{VAEs vs. GANs}
+\begin{itemize}
+    \item \textbf{VAE (Variational Autoencoder)}: Encoder maps input to latent distribution $q(z|x)$, decoder samples $z$ to reconstruct. Optimizes ELBO (reconstruction + KL divergence).
+    \begin{itemize}
+        \item \textit{Pros}: Stable training, explicit latent structure, interpretable.
+        \item \textit{Cons}: Blurry outputs (MSE loss), limited diversity.
+    \end{itemize}
+    \item \textbf{GAN (Generative Adversarial Network)}: Generator $G$ creates fakes, Discriminator $D$ distinguishes real vs fake. Minimax game: $\min_G \max_D V(D, G)$.
+    \begin{itemize}
+        \item \textit{Pros}: Sharp, high-quality images.
+        \item \textit{Cons}: Unstable training, mode collapse, hard to evaluate.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Effect of Regularization}
+\begin{itemize}
+    \item Prevents overfitting, encourages smooth/manifold latent spaces.
+    \item In VAEs: KL divergence regularizes latent distribution toward standard normal, ensuring continuity (interpolation works).
+    \item In GANs: Techniques like spectral normalization, gradient penalty stabilize training and improve sample diversity.
+\end{itemize}
+
+\subsection{Diffusion Models}
+\begin{itemize}
+    \item \textbf{Forward process}: Gradually add Gaussian noise to data over $T$ steps until it becomes pure noise.
+    \item \textbf{Reverse process}: Train neural network to predict/remove noise at each step, recovering data from noise.
+    \item \textbf{Pros}: Stable training, high diversity/fidelity, modular. \textbf{Cons}: Slow sampling (many steps required).
+\end{itemize}
+
+\subsection{Controlling Diffusion}
+\begin{itemize}
+    \item \textbf{Classifier Guidance}: Use gradients from a trained classifier to steer generation toward a specific class.
+    \item \textbf{Classifier-Free Guidance}: Condition generation on text/labels during training. At inference, blend conditional and unconditional predictions: $\hat{\epsilon} = \epsilon_u + w (\epsilon_c - \epsilon_u)$. Higher $w$ = stronger conditioning.
+\end{itemize}
+
+\subsection{Flow Models (Flow Matching)}
+\begin{itemize}
+    \item Learns a continuous velocity field (ODE) that transports noise distribution to data distribution.
+    \item \textbf{Advantage over Diffusion}: Direct trajectory, fewer steps needed, more efficient sampling.
+    \item \textbf{Mathematically}: Defines ordinary differential equation $\frac{d\mathbf{x}}{dt} = v_\theta(\mathbf{x}, t)$, solved via numerical integrator (e.g., Euler method).
+\end{itemize}
+
+\end{document}
