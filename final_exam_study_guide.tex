@@ -179,11 +179,35 @@ $$L_o(\mathbf{x}, \omega_o) = L_e(\mathbf{x}, \omega_o) + \int_{\Omega} f_r(\mat
 
 \subsection{Acceleration Structures}
 Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
+Two fundamental approaches:
+
+\begin{formulabox}{BVH vs. Spatial Partitioning}
+\begin{tabular}{>{\bfseries}p{2.5cm} p{4.5cm} p{4.5cm}}
+& \textbf{BVH} & \textbf{k-d Tree / Grid} \\
+Partitioning & Object-based (group objects) & Space-based (cut space) \\
+Overlap & Child bounding boxes \textit{can} overlap & Child subspaces \textit{disjoint} \\
+Object cutting & No (objects stay intact) & Yes (triangles may be cut/split) \\
+Empty space & Good — large boxes skip quickly & Grid: poor; k-d Tree: good \\
+Dynamic scenes & \textcolor{green}{✅ Good} (update local AABB) & \textcolor{red}{❌ Poor} (tree may need rebuild) \\
+Industry & ✅ NVIDIA RTX hardware uses BVH & Offline renderers (k-d Tree) \\
+\end{tabular}
+\end{formulabox}
+
+\textbf{BVH (Bounding Volume Hierarchy)}:
 \begin{itemize}
-    \item \textbf{BVH (Bounding Volume Hierarchy)}: Tree structure where each node bounds a subset of geometry with a bounding box. Traverse tree; skip volumes that ray doesn't intersect.
-    \item \textbf{Spatial Partitioning}: Divide space into uniform grid or octree. Only test objects in cells the ray passes through.
-    \item \textbf{Trade-off}: BVH adapts to geometry density (tight bounds), grids are simpler but may have empty/overfilled cells.
+    \item Root node = big AABB containing all objects. Internal nodes = bounding subgroups. Leaves = few triangles.
+    \item Ray tests AABB first. \textbf{If miss}: skip entire subtree. \textbf{If hit}: recurse. Only at leaf do exact ray-triangle tests.
+    \item Uses AABBs because Ray-Box intersection is much cheaper than Ray-Triangle.
 \end{itemize}
+
+\textbf{Spatial Partitioning} (three types):
+\begin{itemize}
+    \item \textbf{Uniform Grid}: Space cut into equal-sized cubes. Each triangle stored in cells it overlaps. Ray walks cells via DDA. \textit{Problem}: "Teapot in a stadium" — many empty cells if scene density is uneven.
+    \item \textbf{Octree}: Adaptive grid — subdivide cell into 8 sub-cubes only if overloaded. Better than uniform grid for sparse scenes.
+    \item \textbf{k-d Tree}: Each split plane cuts space into two halves, alternating X/Y/Z axes. Subspaces are disjoint — ray never backtracks. Best for \textit{static} scenes; poor for dynamic (object movement requires tree rebuild + possible object splitting).
+\end{itemize}
+
+\item \textbf{Key principle}: Ray-Box intersection \textit{much} cheaper than Ray-Triangle intersection. The goal is to maximize boxes tested and minimize triangles tested.
 
 \subsection{Light Units \& BRDF}
 \begin{itemize}
