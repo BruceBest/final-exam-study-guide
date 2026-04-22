@@ -8,12 +8,25 @@
 \usepackage{xcolor}
 \usepackage{hyperref}
 \usepackage{multicol}
+\usepackage{array}
 
 \geometry{a4paper, margin=0.75in}
 \hypersetup{colorlinks=true, linkcolor=blue!70!black, urlcolor=blue}
 
+% Colored boxes for formula cheat sheets
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\newtcolorbox{formulabox}[1][]{
+  colback=blue!5!white,
+  colframe=blue!60!black,
+  fonttitle=\bfseries,
+  title=#1,
+  arc=3pt,
+  boxrule=0.8pt
+}
+
 \title{\textbf{EECS 498/598-016 Final Exam Study Guide}\\
-\large{Winter 2026 - Conceptual Reference}}
+\large{Winter 2026 - Conceptual Reference with Key Formulas}}
 \author{Based on Lecture Slides + Exam Prep}
 \date{\today}
 
@@ -22,7 +35,7 @@
 \vspace{-1em}
 
 \begin{abstract}
-\noindent Exam format: 70 minutes, closed-note, 6 questions. Focus on understanding core concepts, not proofs, programming, or complex equations.
+\noindent Exam format: 70 minutes, closed-note, 6 questions. Focus on understanding core concepts, not proofs, programming, or complex equations. \textbf{Key formulas are marked with \colorbox{blue!10}{\textcolor{blue!60!black}{Formula Box}}.}
 \end{abstract}
 
 \tableofcontents
@@ -31,7 +44,7 @@
 \section{Rasterization}
 \subsection{Transformations \& Projections}
 \begin{itemize}
-    \item \textbf{Homogeneous Coordinates}: Enable translation to be represented as matrix multiplication (same as rotation/scaling). 2D points become $(x, y, 1)$, allowing any affine transform to use a $3\times3$ matrix.
+    \item \textbf{Homogeneous Coordinates}: Enable translation to be represented as matrix multiplication (same as rotation/scaling). 2D points become $(x, y, 1)$, allowing any affine transform to use a $3\times3$ matrix. 3D points become $(x, y, z, 1)$ with $4\times4$ matrices.
     \item \textbf{Composition}: Chain transforms via matrix multiplication. Order matters (non-commutative: $M_1 M_2 \neq M_2 M_1$).
     \item \textbf{Viewing Transform}: Camera matrix positions/orients the world relative to viewer.
     \item \textbf{Projection}: 
@@ -41,6 +54,36 @@
     \end{itemize}
 \end{itemize}
 
+\begin{formulabox}{2D Transformation Matrices}
+Scaling (factors $s_x, s_y$):
+$$\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} s_x & 0 \\ 0 & s_y \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}$$
+
+Reflection about $y$-axis:
+$$\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} -1 & 0 \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}$$
+
+Shear (horizontal shift $a$ at $y=1$):
+$$\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} 1 & a \\ 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}$$
+
+Rotation (CCW by $\theta$ about origin):
+$$\begin{bmatrix} x' \\ y' \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta \\ \sin\theta & \cos\theta \end{bmatrix} \begin{bmatrix} x \\ y \end{bmatrix}$$
+\end{formulabox}
+
+\begin{formulabox}{Homogeneous Coordinates — Full $3\times3$ Matrices}
+Translation by $(t_x, t_y)$:
+$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}$$
+
+Rotation (CCW by $\theta$):
+$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & 0 \\ \sin\theta & \cos\theta & 0 \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}$$
+\end{formulabox}
+
+\begin{formulabox}{Composition of Transforms}
+To apply transform $A$ then $B$:
+$$M = B \cdot A$$
+Applied to point $\mathbf{p}$:
+$$\mathbf{p}' = B \cdot A \cdot \mathbf{p}$$
+\emph{Note: rightmost transform is applied first.}
+\end{formulabox}
+
 \subsection{Barycentric Coordinates}
 \begin{itemize}
     \item Represent any point inside a triangle as a weighted sum of its vertices: $P = \alpha A + \beta B + \gamma C$, where $\alpha+\beta+\gamma=1$.
@@ -48,13 +91,32 @@
     \item Used for \textbf{interpolation}: smoothly blend vertex attributes (color, normals, texture coordinates) across the triangle surface.
 \end{itemize}
 
+\begin{formulabox}{Barycentric Interpolation}
+Given vertex attributes $f_A, f_B, f_C$:
+$$f_P = \alpha \cdot f_A + \beta \cdot f_B + \gamma \cdot f_C$$
+where $\alpha + \beta + \gamma = 1$.\\
+Point $P$ is inside $\triangle ABC$ iff $\alpha,\beta,\gamma \in [0, 1]$.
+\end{formulabox}
+
 \subsection{Blinn-Phong Shading}
 Empirical local illumination model with three components:
 \begin{itemize}
-    \item \textbf{Diffuse}: Surface scatters light equally in all directions. Depends on angle between light direction $\vec{L}$ and surface normal $\vec{N}$: $\max(0, \vec{N} \cdot \vec{L})$.
-    \item \textbf{Specular}: Shiny highlights. Depends on view direction and reflected light direction. \textit{Blinn} variant uses the \textbf{halfway vector} $\vec{H} = \frac{\vec{L}+\vec{V}}{\|\vec{L}+\vec{V}\|}$, computing $\max(0, \vec{N} \cdot \vec{H})^n$. More efficient than original Phong.
-    \item \textbf{Ambient}: Constant baseline lighting to simulate indirect/global illumination.
+    \item \textbf{Diffuse}: Surface scatters light equally in all directions. Depends on angle between light direction $\vec{L}$ and surface normal $\vec{N}$.
+    \item \textbf{Specular}: Shiny highlights. \textit{Blinn} variant uses the \textbf{halfway vector} $\vec{H}$.
+    \item \textbf{Ambient}: Constant baseline lighting.
 \end{itemize}
+
+\begin{formulabox}{Blinn-Phong Model}
+Total color at point:
+$$I = k_a I_a + k_d I_l \max(0, \vec{N} \cdot \vec{L}) + k_s I_l \max(0, \vec{N} \cdot \vec{H})^n$$
+where:
+\begin{itemize}
+    \item $\vec{H} = \frac{\vec{L} + \vec{V}}{\|\vec{L} + \vec{V}\|}$ (halfway vector)
+    \item $\vec{L}$ = light direction, $\vec{V}$ = view direction, $\vec{N}$ = surface normal
+    \item $k_a, k_d, k_s$ = ambient/diffuse/specular coefficients
+    \item $n$ = shininess exponent (larger = tighter highlight)
+\end{itemize}
+\end{formulabox}
 
 \subsection{Anti-Aliasing}
 \begin{itemize}
@@ -79,15 +141,32 @@ Empirical local illumination model with three components:
 \end{itemize}
 
 \section{Ray Tracing}
+\subsection{Ray-Surface Intersection}
+\begin{itemize}
+    \item Ray equation: $\mathbf{r}(t) = \mathbf{o} + t \cdot \mathbf{d}$, where $\mathbf{o}$ = origin, $\mathbf{d}$ = direction, $t > 0$.
+    \item For spheres: solve $|\mathbf{r}(t) - \mathbf{c}|^2 = R^2$ for $t$ (quadratic equation).
+\end{itemize}
+
+\begin{formulabox}{Ray Equation}
+$$\mathbf{r}(t) = \mathbf{o} + t \cdot \mathbf{d}, \quad t \geq 0$$
+Find smallest $t > 0$ where ray intersects an object.
+\end{formulabox}
+
 \subsection{The Rendering Equation}
-\[
-L_o(\mathbf{x}, \omega_o) = L_e(\mathbf{x}, \omega_o) + \int_{\Omega} f_r(\mathbf{x}, \omega_i, \omega_o) L_i(\mathbf{x}, \omega_i) (\mathbf{n} \cdot \omega_i) \, d\omega_i
-\]
 \begin{itemize}
     \item Describes light leaving a point in direction $\omega_o$ as sum of emitted light + reflected light from all incoming directions.
     \item \textbf{Integral}: Requires evaluating contributions from infinitely many directions $\Rightarrow$ solved via Monte Carlo sampling in practice.
     \item Recursive in nature: $L_i$ itself depends on light leaving other surfaces.
 \end{itemize}
+
+\begin{formulabox}{Rendering Equation}
+$$L_o(\mathbf{x}, \omega_o) = L_e(\mathbf{x}, \omega_o) + \int_{\Omega} f_r(\mathbf{x}, \omega_i, \omega_o) \, L_i(\mathbf{x}, \omega_i) \, (\mathbf{n} \cdot \omega_i) \, d\omega_i$$
+\begin{itemize}
+    \item $L_o$ = outgoing radiance, $L_e$ = emitted radiance
+    \item $f_r$ = BRDF, $L_i$ = incoming radiance
+    \item $\mathbf{n} \cdot \omega_i$ = cosine weighting (Lambert's law)
+\end{itemize}
+\end{formulabox}
 
 \subsection{Recursive Ray Tracing}
 \begin{itemize}
@@ -110,12 +189,15 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
 \begin{itemize}
     \item \textbf{Radiance ($L$)}: Power per unit area per unit solid angle. What cameras/eyes measure. Constant along a ray in vacuum.
     \item \textbf{Irradiance ($E$)}: Power per unit area arriving at a surface. Integral of incoming radiance.
-    \item \textbf{BRDF (Bidirectional Reflectance Distribution Function)}: $f_r(\omega_i, \omega_o)$ describes how much light from direction $\omega_i$ reflects toward $\omega_o$.
-    \begin{itemize}
-        \item Must satisfy \textbf{Helmholtz reciprocity}: $f_r(\omega_i, \omega_o) = f_r(\omega_o, \omega_i)$.
-        \item Must be \textbf{energy conserving}: reflected energy $\leq$ incoming energy.
-    \end{itemize}
+    \item \textbf{BRDF}: $f_r(\omega_i, \omega_o)$ describes how much light from direction $\omega_i$ reflects toward $\omega_o$.
 \end{itemize}
+
+\begin{formulabox}{BRDF Properties}
+\textbf{Helmholtz reciprocity:}
+$$f_r(\omega_i, \omega_o) = f_r(\omega_o, \omega_i)$$
+\textbf{Energy conservation:}
+$$\int_{\Omega} f_r(\omega_i, \omega_o)(\mathbf{n} \cdot \omega_o)\, d\omega_o \leq 1$$
+\end{formulabox}
 
 \section{Geometry \& Representations}
 \subsection{3D Representations Comparison}
@@ -131,13 +213,29 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
 
 \subsection{Bézier Curves \& Surfaces}
 \begin{itemize}
-    \item \textbf{Curve}: $P(t) = \sum_{i=0}^n B_{i,n}(t) P_i$, where $B_{i,n}$ are Bernstein polynomials.
     \item Defined by \textbf{control points}. Curve stays within convex hull of control points.
     \item \textbf{Properties}: Smooth, interpolates endpoints, tangent to first/last control segments.
     \item \textbf{Surfaces}: Tensor product of two Bézier curves. Used in modeling (e.g., car bodies, character design).
 \end{itemize}
 
+\begin{formulabox}{Cubic Bézier Curve}
+$$P(t) = (1-t)^3 P_0 + 3(1-t)^2 t P_1 + 3(1-t) t^2 P_2 + t^3 P_3, \quad t \in [0, 1]$$
+\begin{itemize}
+    \item $P_0, P_3$ = endpoints (curve passes through them)
+    \item $P_1, P_2$ = control points (shape handles, curve is tangent to $P_0 \rightarrow P_1$ and $P_2 \rightarrow P_3$)
+\end{itemize}
+\end{formulabox}
+
 \section{Reconstruction}
+\begin{formulabox}{Camera Projection}
+$$\mathbf{x} = K [R \mid t] \mathbf{X}$$
+\begin{itemize}
+    \item $K$ = intrinsic matrix $\begin{bmatrix} f_x & s & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}$
+    \item $[R \mid t]$ = extrinsic matrix (rotation + translation)
+    \item $\mathbf{X}$ = 3D world point (homogeneous), $\mathbf{x}$ = 2D image pixel
+\end{itemize}
+\end{formulabox}
+
 \subsection{Sparse vs. Dense Reconstruction}
 \begin{itemize}
     \item \textbf{Sparse}: Recover 3D positions of a \textbf{small set} of distinctive feature points. Fast, used for camera pose estimation and SfM (Structure from Motion).
@@ -147,7 +245,6 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
 \subsection{Camera Calibration}
 \begin{itemize}
     \item \textbf{Goal}: Determine intrinsic parameters (focal length, principal point, skew) and extrinsic parameters (rotation, translation relative to world).
-    \item Maps 3D world points to 2D image pixels: $\mathbf{x} = K [R | t] \mathbf{X}$.
     \item Essential for metric reconstruction (true scale/shape) vs. projective reconstruction.
 \end{itemize}
 
@@ -158,6 +255,15 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
     \item Reduces 2D search to 1D search for correspondence.
     \item Encoded in the \textbf{Essential Matrix} (calibrated) or \textbf{Fundamental Matrix} (uncalibrated).
 \end{itemize}
+
+\begin{formulabox}{Epipolar Constraint}
+$$\mathbf{x}'^T F \mathbf{x} = 0$$
+\begin{itemize}
+    \item $F$ = Fundamental Matrix (uncalibrated), or $E$ = Essential Matrix (calibrated)
+    \item $\mathbf{x}, \mathbf{x}'$ = corresponding points in two images
+    \item Epipolar line in image 2: $\mathbf{l}' = F \mathbf{x}$
+\end{itemize}
+\end{formulabox}
 
 \subsection{Eight-Point Algorithm}
 \begin{itemize}
@@ -187,20 +293,44 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
     \item \textbf{Marching Cubes}: Algorithm to extract triangle mesh from volumetric data (like SDF). Divides space into cubes, checks sign at vertices, interpolates edge intersections, generates triangles.
 \end{itemize}
 
+\begin{formulabox}{Signed Distance Function}
+$$f(\mathbf{x}) \begin{cases}
+> 0, & \text{outside surface} \\
+= 0, & \text{on surface} \\
+< 0, & \text{inside surface}
+\end{cases}$$
+Surface normal: $\mathbf{n} = \nabla f(\mathbf{x})$ (gradient of SDF)
+\end{formulabox}
+
 \subsection{NeRF \& Volume Rendering}
 \begin{itemize}
     \item \textbf{NeRF}: Maps $(x,y,z,\theta,\phi) \rightarrow (RGB, \sigma)$ via MLP.
-    \item \textbf{Volume Rendering}: Composite color along ray: $C = \sum_{i=1}^N T_i \alpha_i \mathbf{c}_i$, where $T_i = \prod_{j=1}^{i-1} (1-\alpha_j)$ is transmittance (occlusion).
     \item \textbf{Density $\sigma$ over opacity $\alpha$}: $\sigma$ is a continuous property independent of sampling step $\delta_i$. $\alpha_i = 1 - \exp(-\sigma_i \delta_i)$. Allows consistent rendering across different sampling rates.
     \item \textbf{Importance Sampling}: Coarse network predicts density distribution $\rightarrow$ fine network samples more densely near surfaces (high density regions). Improves detail without extra compute.
 \end{itemize}
 
+\begin{formulabox}{NeRF Volume Rendering}
+Composited color along ray:
+$$C = \sum_{i=1}^{N} T_i \alpha_i \mathbf{c}_i, \quad \text{where } T_i = \prod_{j=1}^{i-1} (1 - \alpha_j)$$
+Opacity from density:
+$$\alpha_i = 1 - \exp(-\sigma_i \delta_i)$$
+\begin{itemize}
+    \item $\mathbf{c}_i$ = color at sample $i$, $\sigma_i$ = density
+    \item $\delta_i$ = distance between samples, $T_i$ = transmittance (accumulated visibility)
+\end{itemize}
+\end{formulabox}
+
 \subsection{Positional Encoding}
 \begin{itemize}
     \item \textbf{Problem}: MLPs struggle to learn high-frequency details (spectral bias).
-    \item \textbf{Solution}: Map input coordinates $\mathbf{x}$ to higher-dimensional space using sinusoidal functions: $\gamma(\mathbf{x}) = [\sin(2^0 \pi \mathbf{x}), \cos(2^0 \pi \mathbf{x}), \dots, \sin(2^{L-1} \pi \mathbf{x}), \cos(2^{L-1} \pi \mathbf{x})]$.
+    \item \textbf{Solution}: Map input coordinates $\mathbf{x}$ to higher-dimensional space using sinusoidal functions.
     \item Enables network to represent fine spatial variations.
 \end{itemize}
+
+\begin{formulabox}{Positional Encoding}
+$$\gamma(\mathbf{x}) = \big[\sin(2^0 \pi \mathbf{x}), \cos(2^0 \pi \mathbf{x}), \; \sin(2^1 \pi \mathbf{x}), \cos(2^1 \pi \mathbf{x}), \dots, \sin(2^{L-1} \pi \mathbf{x}), \cos(2^{L-1} \pi \mathbf{x})\big]$$
+Each coordinate is expanded to $2L$ dimensions via sine/cosine at exponentially increasing frequencies.
+\end{formulabox}
 
 \subsection{Gaussian Splatting}
 \begin{itemize}
@@ -225,17 +355,26 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
 
 \subsection{VAEs vs. GANs}
 \begin{itemize}
-    \item \textbf{VAE (Variational Autoencoder)}: Encoder maps input to latent distribution $q(z|x)$, decoder samples $z$ to reconstruct. Optimizes ELBO (reconstruction + KL divergence).
+    \item \textbf{VAE (Variational Autoencoder)}: Encoder maps input to latent distribution $q(z|x)$, decoder samples $z$ to reconstruct.
     \begin{itemize}
         \item \textit{Pros}: Stable training, explicit latent structure, interpretable.
         \item \textit{Cons}: Blurry outputs (MSE loss), limited diversity.
     \end{itemize}
-    \item \textbf{GAN (Generative Adversarial Network)}: Generator $G$ creates fakes, Discriminator $D$ distinguishes real vs fake. Minimax game: $\min_G \max_D V(D, G)$.
+    \item \textbf{GAN (Generative Adversarial Network)}: Generator $G$ creates fakes, Discriminator $D$ distinguishes real vs fake. Minimax game.
     \begin{itemize}
         \item \textit{Pros}: Sharp, high-quality images.
         \item \textit{Cons}: Unstable training, mode collapse, hard to evaluate.
     \end{itemize}
 \end{itemize}
+
+\begin{formulabox}{VAE Loss (ELBO) \& GAN Objective}
+\textbf{VAE Objective (ELBO):}
+$$\mathcal{L} = \mathbb{E}_{q(z|x)}[\log p(x|z)] - \text{KL}(q(z|x) \,\|\, p(z))$$
+(reconstruction loss + KL regularization toward $\mathcal{N}(0, 1)$)
+
+\textbf{GAN Minimax:}
+$$\min_G \max_D V(D, G) = \mathbb{E}_{x \sim p_{\text{data}}}[\log D(x)] + \mathbb{E}_{z \sim p_z}[\log(1 - D(G(z)))]$$
+\end{formulabox}
 
 \subsection{Effect of Regularization}
 \begin{itemize}
@@ -254,14 +393,52 @@ Naive ray-triangle intersection is $O(N)$. Acceleration reduces to $O(\log N)$:
 \subsection{Controlling Diffusion}
 \begin{itemize}
     \item \textbf{Classifier Guidance}: Use gradients from a trained classifier to steer generation toward a specific class.
-    \item \textbf{Classifier-Free Guidance}: Condition generation on text/labels during training. At inference, blend conditional and unconditional predictions: $\hat{\epsilon} = \epsilon_u + w (\epsilon_c - \epsilon_u)$. Higher $w$ = stronger conditioning.
+    \item \textbf{Classifier-Free Guidance}: Condition generation on text/labels during training. At inference, blend conditional and unconditional predictions. Higher $w$ = stronger conditioning.
 \end{itemize}
+
+\begin{formulabox}{Classifier-Free Guidance}
+$$\hat{\epsilon} = \epsilon_u + w \cdot (\epsilon_c - \epsilon_u)$$
+\begin{itemize}
+    \item $\epsilon_c$ = conditional noise prediction, $\epsilon_u$ = unconditional
+    \item $w > 1$ strengthens conditioning (e.g., $w = 7.5$ typical)
+    \item $w = 1$ $\rightarrow$ purely conditional, $w = 0$ $\rightarrow$ unconditional
+\end{itemize}
+\end{formulabox}
 
 \subsection{Flow Models (Flow Matching)}
 \begin{itemize}
     \item Learns a continuous velocity field (ODE) that transports noise distribution to data distribution.
     \item \textbf{Advantage over Diffusion}: Direct trajectory, fewer steps needed, more efficient sampling.
-    \item \textbf{Mathematically}: Defines ordinary differential equation $\frac{d\mathbf{x}}{dt} = v_\theta(\mathbf{x}, t)$, solved via numerical integrator (e.g., Euler method).
 \end{itemize}
+
+\begin{formulabox}{Flow Matching ODE}
+$$\frac{d\mathbf{x}}{dt} = v_\theta(\mathbf{x}, t)$$
+Solve from noise $\mathbf{x}(0) \sim \mathcal{N}(0, 1)$ to data $\mathbf{x}(1)$ using numerical integrator (e.g., Euler method: $\mathbf{x}_{t+\Delta t} = \mathbf{x}_t + v_\theta(\mathbf{x}_t, t) \cdot \Delta t$).
+\end{formulabox}
+
+\section{Quick Reference Summary}
+\begin{formulabox}{Must-Memorize Transform Matrices}
+\begin{tabular}{>{\bfseries}p{2.5cm} p{10cm}}
+Scale & $\begin{bmatrix} s_x & 0 & 0 \\ 0 & s_y & 0 \\ 0 & 0 & 1 \end{bmatrix}$ \\[1em]
+Rotate ($\theta$) & $\begin{bmatrix} \cos\theta & -\sin\theta & 0 \\ \sin\theta & \cos\theta & 0 \\ 0 & 0 & 1 \end{bmatrix}$ \\[1em]
+Translate & $\begin{bmatrix} 1 & 0 & t_x \\ 0 & 1 & t_y \\ 0 & 0 & 1 \end{bmatrix}$ \\[1em]
+Shear & $\begin{bmatrix} 1 & a & 0 \\ b & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$ \\[1em]
+Reflect $y$-axis & $\begin{bmatrix} -1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$
+\end{tabular}
+\end{formulabox}
+
+\begin{formulabox}{Key Equations at a Glance}
+\begin{tabular}{>{\bfseries}p{2.5cm} p{10cm}}
+Blinn-Phong & $I = k_a I_a + k_d I_l (\vec{N}\!\cdot\!\vec{L}) + k_s I_l (\vec{N}\!\cdot\!\vec{H})^n$ \\[0.6em]
+Halfway vector & $\vec{H} = \frac{\vec{L} + \vec{V}}{\|\vec{L} + \vec{V}\|}$ \\[0.8em]
+NeRF color & $C = \sum T_i \alpha_i \mathbf{c}_i, \;\; T_i = \prod(1-\alpha_j)$ \\[0.8em]
+Opacity & $\alpha_i = 1 - \exp(-\sigma_i \delta_i)$ \\[0.6em]
+Positional encoding & $[\sin(2^k \pi \mathbf{x}), \cos(2^k \pi \mathbf{x})]$ \\[0.6em]
+CFG & $\hat{\epsilon} = \epsilon_u + w(\epsilon_c - \epsilon_u)$ \\[0.6em]
+Ray & $\mathbf{r}(t) = \mathbf{o} + t \cdot \mathbf{d}$ \\[0.6em]
+Bézier & $P(t) = \sum B_{i,n}(t) P_i$ \\[0.6em]
+Epipolar & $\mathbf{x}'^T F \mathbf{x} = 0$
+\end{tabular}
+\end{formulabox}
 
 \end{document}
