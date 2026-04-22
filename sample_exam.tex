@@ -1,66 +1,274 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
+\usepackage{amssymb}
 \usepackage{geometry}
 \usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\usepackage{array}
+\usepackage{hyperref}
 
-\geometry{a4paper, margin=1in}
+\geometry{a4paper, margin=0.9in}
+\hypersetup{colorlinks=true, linkcolor=blue!70!black, urlcolor=blue}
 
-\title{\textbf{EECS 498/598-016 Computer Graphics Sample Final Exam}}
-\author{Based on Winter 2026 Lecture Content}
+\title{\textbf{EECS 498/598-016 Computer Graphics --- Sample Final Exam}\\
+\large{Winter 2026 - Answer Key \& Detailed Solutions}}
+\author{}
 \date{}
 
 \begin{document}
 \maketitle
-\noindent \textbf{Instructions:} Closed book, 70 minutes. Answer all conceptual questions. \\
-\textbf{Name:} \underline{\hspace{8cm}} \textbf{Uniqname:} \underline{\hspace{3cm}}
 
-\begin{enumerate}
-    \item \textbf{[Rasterization / Transformations]}
-    \\ Suppose you have a 2D triangle centered at the origin. You want to translate it 5 units right, then rotate it $90^\circ$ counter-clockwise about the origin.
-    \begin{enumerate}[label=\alph*.]
-        \item Write down the $3 \times 3$ homogeneous matrices $T$ (translation) and $R$ (rotation).
-        \item What is the combined matrix $M$? (Hint: order matters.)
-        \item Apply $M$ to the vertex $(0, 1)$. What are its final coordinates?
-    \end{enumerate}
-    \vspace{1cm}
+\noindent
+\begin{tabular}{@{}l@{\hspace{2em}}l}
+\textbf{Exam Format:} & 70 minutes, closed-note, 6 questions \\
+\textbf{Style:} & Conceptual understanding, no programming, no proofs, no complex equations \\
+\end{tabular}
 
-    \item \textbf{[Ray Tracing]}
-    \\ When a ray hits a shiny glass surface, what secondary rays are spawned? Briefly explain the physical effect each one simulates.
-    \vspace{3cm}
+\vspace{1em}
 
-    \item \textbf{[Neural Fields / NeRF]}
-    \begin{enumerate}[label=\alph*.]
-        \item Why do standard MLPs struggle to learn high-frequency details? (Name the phenomenon.)
-        \item How does \textit{Positional Encoding} help?
-    \end{enumerate}
-    \vspace{2cm}
+% ============================================================
+\section*{Question 1: Transformations \& Rasterization}
 
-    \item \textbf{[Geometry / Representations]}
-    \\ Compare a \textbf{Triangular Mesh} and an \textbf{Implicit Surface (e.g., SDF)}:
-    \begin{enumerate}[label=\alph*.]
-        \item Which makes Boolean union (merging two shapes) easier? Why?
-        \item Which is better for fast rasterization? Why?
-        \item Describe how \textit{Marching Cubes} converts an implicit surface into a mesh.
-    \end{enumerate}
-    \vspace{2cm}
+\textbf{1.a.} Why is the order of transformations important when composing multiple matrices?
 
-    \item \textbf{[Reconstruction]}
-    \begin{enumerate}[label=\alph*.]
-        \item Write the Epipolar Constraint.
-        \item Given a point $\mathbf{x}$ in Image~1, what does it constrain in Image~2?
-        \item Write the Camera Projection equation (3D world $\mathbf{X} \rightarrow$ 2D pixel $\mathbf{x}$) and label the Intrinsic and Extrinsic parameters.
-    \end{enumerate}
-    \vspace{2cm}
+\vspace{2cm}
 
-    \item \textbf{[Generative Models]}
-    \begin{enumerate}[label=\alph*.]
-        \item One advantage of GANs over VAEs for image generation.
-        \item What does the neural network learn during the Diffusion \textit{Reverse Process}?
-        \item Purpose of Classifier-Free Guidance and the formula.
-        \item How do Flow Models differ from Diffusion in generating samples?
-    \end{enumerate}
-    \vspace{2cm}
+\textbf{1.b.} Write the $3\times 3$ homogeneous transformation matrix for a 2D rotation by $\theta$ counter-clockwise about the origin.
+
+\vspace{2cm}
+
+\textbf{1.c.} Explain how Barycentric Coordinates are used in rasterization to interpolate vertex attributes across a triangle. Write the key formula.
+
+\vspace{3cm}
+
+\textbf{1.d.} In the Blinn-Phong shading model, what is the ``halfway vector'' $\vec{H}$ and why is it used instead of the pure reflection vector $\vec{R}$?
+
+\vspace{3.5cm}
+
+% ============================================================
+\section*{Question 2: Ray Tracing}
+
+\textbf{2.a.} What are the three components of the rendering equation, and what does the integral term represent physically?
+
+\vspace{2cm}
+
+\textbf{2.b.} Explain how recursive ray tracing simulates global illumination effects.
+
+\vspace{2.5cm}
+
+\textbf{2.c.} Describe the BVH tree traversal algorithm for a single ray. How does it skip unnecessary triangle intersection tests?
+
+\vspace{2.5cm}
+
+\textbf{2.d.} A radiometer measures $50\,\mathrm{W/m^2\!\cdot\!sr}$ of light coming from a specific direction toward a surface patch. Which radiometric quantity is this: Radiance or Irradiance? Explain the difference in terms of directionality.
+
+\vspace{2.5cm}
+
+% ============================================================
+\section*{Question 3: Neural Fields}
+
+\textbf{3.a.} List three advantages of neural implicit representations compared to voxels or point clouds.
+
+\vspace{2cm}
+
+\textbf{3.b.} Explain why the original form of neural fields is slow for training and inference. Suggest how we can make this faster.
+
+\vspace{2.5cm}
+
+\textbf{3.c.} For NeRF volume rendering, we don't store the opacity value directly but instead model the density $\sigma$. Explain why this choice is reasonable and beneficial.
+
+\vspace{2.5cm}
+
+\textbf{3.d.} For NeRF volume rendering, why do we need importance sampling for points along the ray? Explain conceptually how it can be implemented in practice.
+
+\vspace{2.5cm}
+
+% ============================================================
+\section*{Question 4: Geometry}
+
+\textbf{4.a.} Compare a triangular mesh and an implicit surface (SDF): which representation is better for checking if a point is inside or outside an object, and why?
+
+\vspace{2cm}
+
+\textbf{4.b.} Describe the property of Bézier curves regarding the convex hull of their control points.
+
+\vspace{2cm}
+
+\textbf{4.c.} Explain the purpose of the \textit{Marching Cubes} algorithm. What triggers triangle generation in a single grid cell?
+
+\vspace{2.5cm}
+
+% ============================================================
+\section*{Question 5: Reconstruction}
+
+\textbf{5.a.} Write the camera projection equation mapping a 3D world point $\mathbf{X}$ to a 2D image pixel $\mathbf{x}$.
+
+\vspace{2cm}
+
+\textbf{5.b.} What is the epipolar constraint equation? How does it simplify the correspondence search between two images?
+
+\vspace{2.5cm}
+
+\textbf{5.c.} Explain the epipolar constraint equation $\mathbf{x}'^T F \mathbf{x} = 0$. Why can it NOT be written as $\mathbf{x}^T F \mathbf{x}' = 0$?
+
+\vspace{2cm}
+
+\textbf{5.d.} Name two specific scenarios where Multi-View Stereo (MVS) algorithms struggle or fail.
+
+\vspace{2cm}
+
+% ============================================================
+\section*{Question 6: Generative Models}
+
+\textbf{6.a.} What is the main advantage of GANs over VAEs in terms of generated image quality, and what loss function difference causes this?
+
+\vspace{2cm}
+
+\textbf{6.b.} Explain what the KL divergence term does in the VAE loss function.
+
+\vspace{2cm}
+
+\textbf{6.c.} What is the purpose of Classifier-Free Guidance in diffusion models, and what is the formula?
+
+\vspace{2.5cm}
+
+\textbf{6.d.} How do Flow Models (Flow Matching) differ from Diffusion Models in terms of generation process and efficiency?
+
+\vspace{2cm}
+
+% ============================================================
+\newpage
+\section*{Answer Key \& Detailed Solutions}
+
+\vspace{0.5em}
+
+% Q1 A-D
+\textbf{Q1.a.} Matrix multiplication is \textbf{non-commutative} ($AB \neq BA$). Example: translating then rotating an object rotates it around the origin at its new position, while rotating then translating moves it in a rotated direction—these produce different final positions.
+
+\vspace{0.75em}
+\textbf{Q1.b.}
+$$\begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = \begin{bmatrix} \cos\theta & -\sin\theta & 0 \\ \sin\theta & \cos\theta & 0 \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x \\ y \\ 1 \end{bmatrix}$$
+
+\vspace{0.75em}
+\textbf{Q1.c.} Any point inside a triangle can be expressed as a weighted sum of its three vertices: $P = \alpha A + \beta B + \gamma C$ where $\alpha+\beta+\gamma=1$. For any vertex attribute $f$, its value at $P$ is interpolated as $f_P = \alpha f_A + \beta f_B + \gamma f_C$. The weights $\alpha,\beta,\gamma$ are computed from the relative areas of the sub-triangles.
+
+\vspace{0.75em}
+\textbf{Q1.d.} The halfway vector $\vec{H} = \frac{\vec{L}+\vec{V}}{\|\vec{L}+\vec{V}\|}$ is the normalized sum of the light direction and view direction. In the Blinn-Phong model, $\max(0, \vec{N}\cdot\vec{H})^n$ replaces the Phong reflection calculation $\max(0, \vec{N}\cdot\vec{R})^n$. $\vec{H}$ is \textbf{cheaper to compute} because it doesn't require reflecting $\vec{L}$ about the normal, and it produces similar visual results.
+
+\vspace{1em}
+
+\textbf{Q2.a.} The rendering equation components are:
+(1) \textbf{Emitted radiance} $L_e$ – light directly produced by the surface;
+(2) \textbf{Integral} $\int_\Omega$ – sums up light arriving from \textbf{all possible incoming directions} $\omega_i$ over the hemisphere;
+(3) \textbf{BRDF} $f_r$ – describes how much incoming light reflects toward the outgoing direction;
+(4) \textbf{Cosine term} $\mathbf{n}\cdot\omega_i$ – weights incoming light by the angle (Lambert's Law).
+The integral represents the total reflected light accumulated from every direction in the scene, modeling the infinite light bounces that create global illumination.
+
+\vspace{0.75em}
+\textbf{Q2.b.} Recursive ray tracing traces secondary rays at each hit:
+\begin{itemize}[leftmargin=2em, nosep]
+\item \textbf{Reflection rays} bounce off shiny surfaces, producing mirror effects and interreflections between objects.
+\item \textbf{Refraction rays} bend through transparent materials, creating caustics and distortion effects.
+\item \textbf{Shadow rays} check visibility toward each light source for soft shadows.
+\end{itemize}
+By recursively bouncing these rays and accumulating their weighted contributions (capped at a max depth), the algorithm captures effects like color bleeding and soft shadows that simple local lighting cannot produce.
+
+\vspace{0.75em}
+\textbf{Q2.c.} BVH groups object triangles into a tree of bounding boxes:
+\begin{enumerate}[leftmargin=2em, nosep]
+\item Check if the ray intersects the root bounding box.
+\item \textbf{If NO}: skip the entire subtree—none of its triangles can be hit.
+\item \textbf{If YES}: recursively check child nodes.
+\item At leaf nodes, test individual triangles.
 \end{enumerate}
+The key insight is that \textbf{ray-box intersection is much cheaper than ray-triangle intersection}. By wrapping many triangles in one box, a single cheap test can eliminate hundreds of expensive tests. This reduces complexity from $O(N)$ to roughly $O(\log N)$ for uniformly distributed geometry.
+
+\vspace{0.75em}
+\textbf{Q2.d.} This is \textbf{Radiance}. The unit $\mathrm{W/m^2\!\cdot\!sr}$ (watts per unit area per unit solid angle) is the hallmark of radiance.
+\begin{itemize}[leftmargin=2em, nosep]
+\item \textbf{Radiance} describes light \textbf{along a single direction}—it is the brightness of a specific beam or ray, constant along its path in a vacuum.
+\item \textbf{Irradiance} describes total power arriving at a surface from \textbf{all directions} in the hemisphere above it ($\mathrm{W/m^2}$—no $sr$).
+\end{itemize}
+Since the measurement specifies "from a specific direction," it has directionality, making it Radiance.
+
+\vspace{1em}
+
+\textbf{Q3.a.} Three benefits of neural implicit representations:
+\begin{enumerate}[leftmargin=2em, nosep]
+\item \textbf{Resolution-free / Continuous}: Query any spatial coordinate at arbitrary precision—no pixelation, no blockiness (unlike voxels which are discrete and fixed-resolution).
+\item \textbf{Memory efficient}: Compresses millions/billions of data points into megabytes of network weights (unlike point clouds which store every point individually).
+\item \textbf{Differentiable}: The representation is a neural network with gradients, enabling end-to-end optimization from multi-view images and seamless integration with deep learning methods.
+\end{enumerate}
+
+\vspace{0.75em}
+\textbf{Q3.b.} \textbf{Why slow}: NeRF samples dozens of points per ray per pixel. Each point requires a full MLP forward pass. An image with $1920\times 1080$ pixels and 64 samples per ray results in $\sim\!132$ \textbf{million} MLP evaluations per frame.
+\\
+\textbf{Faster methods}: (1) \textbf{Instant-NGP} uses a multi-resolution hash grid to store spatial features, requiring only a tiny MLP to decode them. (2) \textbf{Occupancy grids} mark empty regions of space so rays skip them entirely. (3) \textbf{3D Gaussian Splatting} replaces MLPs with splatting—orders of magnitude faster inference.
+
+\vspace{0.75em}
+\textbf{Q3.c.}
+\begin{itemize}[leftmargin=2em, nosep]
+\item \textbf{Density $\sigma$ is a continuous material property} independent of the sampling interval $\delta_i$. Opacity $\alpha$ depends on both $\sigma$ \textit{and} the step size: $\alpha_i = 1 - \exp(-\sigma_i \delta_i)$.
+\item \textbf{Benefit}: NeRF's coarse network uses widely-spaced samples and the fine network uses densely-spaced samples. By modeling $\sigma$, both networks predict the same underlying physical property, and the formula automatically adapts $\alpha$ to each sampling rate. If the network predicted $\alpha$ directly, the values would only be valid for that specific step size.
+\end{itemize}
+
+\vspace{0.75em}
+\textbf{Q3.d.} Most of the ray passes through empty space—uniform sampling wastes computation there and undersamples object surfaces, producing blurry boundaries.
+\\
+\textbf{Implementation (Coarse-to-Fine)}: A coarse network first estimates density along the ray with uniform sampling. This produces a probability distribution of where surface material exists. The fine network then uses \textbf{importance sampling}—drawing more sample points in regions of high predicted density (near surfaces) and fewer in empty regions, using the coarse network's PDF for stratified sampling.
+
+\vspace{1em}
+
+\textbf{Q4.a.} \textbf{Implicit surface (SDF)}. To check: simply evaluate $f(P)$. If $f(P)<0$, point $P$ is inside; if $f(P)>0$, $P$ is outside; if $f(P)=0$, $P$ is on the surface. This is a single function call. A mesh requires a ray-cast test from $P$ outward and counting intersections, or complex winding number calculations—both are significantly more expensive.
+
+\vspace{0.75em}
+\textbf{Q4.b.} A Bézier curve \textbf{always lies entirely within the convex hull} of its control points. The curve can never extend outside the region bounded by the control polygon.
+
+\vspace{0.75em}
+\textbf{Q4.c.} \textbf{Purpose}: Convert an implicit surface (defined by $f(x,y,z)=0$) into a triangular mesh for GPU rendering.
+\\
+\textbf{Trigger}: For each grid cell, evaluate $f$ at all 8 corners. \textbf{If the signs are mixed} (some corners positive, some negative), the surface passes through the cell. The algorithm interpolates zero-crossing points on the cell edges, then looks up a pre-computed table (15 cases after symmetry) to generate the corresponding triangles.
+
+\vspace{1em}
+
+\textbf{Q5.a.}
+$$\mathbf{x} = K\,[R \mid t]\,\mathbf{X}$$
+where $\mathbf{X}$ is a homogeneous 3D world point and $\mathbf{x}$ is a homogeneous 2D image pixel.
+
+\vspace{0.75em}
+\textbf{Q5.b.} $\mathbf{x}'^T F \mathbf{x} = 0$. For any point $\mathbf{x}$ in Image~1, this constrains its matching point $\mathbf{x}'$ in Image~2 to lie on a specific line (the \textbf{epipolar line} $\mathbf{l}' = F\mathbf{x}$). Instead of searching the entire 2D image for correspondences, we only search along this 1D line.
+
+\vspace{0.75em}
+\textbf{Q5.c.} Because the Fundamental Matrix maps Image~1 $\to$ Image~2 ($\mathbf{l}' = F\mathbf{x}$). The mathematically equivalent backward form uses the transpose:
+$$\mathbf{x}^T F^T \mathbf{x}' = 0$$
+Since $F$ is generally \textbf{not symmetric} ($F \neq F^T$), the expression $\mathbf{x}^T F \mathbf{x}'$ is NOT equal to zero.
+
+\vspace{0.75em}
+\textbf{Q5.d.} Two failure cases:
+(1) \textbf{Textureless / flat-color regions} (e.g. white walls) — no distinctive features to match between images.
+(2) \textbf{Specular / reflective surfaces} (e.g. mirrors, glass) — appearance changes with viewpoint, so the same 3D point looks different in different images, breaking the correspondence assumption.
+(Also acceptable: occlusions, moving objects.)
+
+\vspace{1em}
+
+\textbf{Q6.a.} GANs produce \textbf{sharper, higher-quality images}. This is because the adversarial loss (Minimax game between Generator and Discriminator) forces the Generator to create realistic \textbf{high-frequency details} to fool the Discriminator. VAEs use pixel-wise MSE (L2) loss which averages over possible reconstructions, resulting in \textbf{blurry outputs}.
+
+\vspace{0.75em}
+\textbf{Q6.b.} The KL divergence term \textbf{regularizes the latent distribution}. It forces the encoder's output distribution $q(z\mid x)$ to stay close to a standard normal $\mathcal{N}(0, 1)$. This ensures: (1) the latent space is \textbf{continuous and smooth} (no gaps where sampling produces nonsense), (2) we can sample from $\mathcal{N}(0,1)$ and get valid generations, and (3) similar inputs map to nearby latent codes, enabling meaningful interpolation.
+
+\vspace{0.75em}
+\textbf{Q6.c.} \textbf{Classifier-Free Guidance} balances how strongly the output follows a text/label condition vs. being unconditioned—without needing a separate classifier model.
+$$\hat{\epsilon} = \epsilon_u + w\!\cdot\!(\epsilon_c - \epsilon_u)$$
+where $\epsilon_c$ = conditional noise prediction, $\epsilon_u$ = unconditional noise prediction, and $w$ is the guidance scale ($w=1$ is standard, $w=7.5$ is typical for strong conditioning).
+
+\vspace{0.75em}
+\textbf{Q6.d.}
+\begin{itemize}[leftmargin=2em, nosep]
+\item \textbf{Diffusion} uses a \textbf{stochastic differential equation (SDE)} with many small noisy steps. Typical models require hundreds to thousands of reverse steps, making sampling slow.
+\item \textbf{Flow Matching} learns a deterministic \textbf{ODE velocity field}: $\frac{d\mathbf{x}}{dt} = v_\theta(\mathbf{x}, t)$. It defines a direct, clean trajectory from noise to data, typically requiring far fewer integration steps—making generation \textbf{significantly more efficient} than Diffusion.
+\end{itemize}
 
 \end{document}
