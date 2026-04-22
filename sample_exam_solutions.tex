@@ -1,0 +1,99 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{geometry}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+\geometry{a4paper, margin=0.85in}
+
+\title{\textbf{EECS 498/598-016 Sample Final Exam --- Solution Key}}
+\author{Answer Key with Detailed Explanations}
+\date{}
+
+\begin{document}
+\maketitle
+
+% Q1
+\section*{Question 1: Rasterization / Transformations}
+
+\paragraph{Problem:} Translate 5 units right, then rotate $90^\circ$ counter-clockwise about the origin. Vertex $(0,1)$.
+
+\paragraph{1a: Transformation Matrices (Homogeneous, $3\times 3$):}
+\[ T = \begin{bmatrix} 1 & 0 & 5 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}, \qquad R = \begin{bmatrix} \cos 90^\circ & -\sin 90^\circ & 0 \\ \sin 90^\circ & \cos 90^\circ & 0 \\ 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{bmatrix} \]
+
+\paragraph{1b: Combined Matrix $M$:} Apply $T$ first, then $R$, so $M = R \cdot T$:
+\[ M = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 0 \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} 1 & 0 & 5 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix} = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 5 \\ 0 & 0 & 1 \end{bmatrix} \]
+
+\paragraph{1c: Final Position of $(0, 1)$:}
+\[ \begin{bmatrix} x' \\ y' \\ 1 \end{bmatrix} = M \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix} = \begin{bmatrix} 0 & -1 & 0 \\ 1 & 0 & 5 \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} 0 \\ 1 \\ 1 \end{bmatrix} = \begin{bmatrix} -1 \\ 5 \\ 1 \end{bmatrix} \]
+Final position is $\boxed{(-1, 5)}$.
+
+\vspace{1em}
+\noindent \textbf{Intuition:} $(0,1)$ first translates right to $(5,1)$. Then rotating $(5,1)$ by $90^\circ$ CCW gives $(-1, 5)$. Correct!
+
+% Q2
+\section*{Question 2: Ray Tracing}
+
+\paragraph{Secondary Rays from Shiny Glass:}
+
+\begin{enumerate}
+    \item \textbf{Reflection Ray}: Bounces off the surface angle (angle of incidence = angle of reflection). Simulates shiny/mirror-like highlights.
+    \item \textbf{Refraction (Transmission) Ray}: Passes through the surface but bends according to Snell's Law (based on the index of refraction). Simulates the glass distorting what's behind it.
+    \item \textbf{Shadow Ray}: Points toward each light source to check if the intersection point is in shadow (occluded by another object).
+\end{enumerate}
+
+% Q3
+\section*{Question 3: Neural Fields}
+
+\paragraph{3a: Spectral Bias.} Standard MLPs easily learn low-frequency functions (smooth shapes, large gradients) but struggle to learn high-frequency functions (sharp edges, fine texture details). This is because the network's weights tend to converge to smooth solutions first.
+
+\paragraph{3b: Positional Encoding.} It maps the input $(x,y,z)$ to a higher-dimensional space using sine and cosine functions at exponentially increasing frequencies. This ``pre-computes'' the high-frequency basis functions, giving the MLP the vocabulary it needs to represent fine details.
+
+% Q4
+\section*{Question 4: Geometry / Representations}
+
+\paragraph{4a: Boolean Union is easier with Implicit Surfaces (SDFs).} You simply take the minimum (or a smooth minimum) of the two functions: $f_{\text{union}} = \min(f_1, f_2)$. This naturally blends two shapes. Meshes require expensive and error-prone polygon clipping algorithms.
+
+\paragraph{4b: Meshes are better for rasterization.} GPUs are hardware-optimized to render triangles directly. Implicit surfaces must first be converted to a mesh (via Marching Cubes) or rendered via slow ray-marching before rasterization.
+
+\paragraph{4c: Marching Cubes.} It places a grid over the space. For each cell:
+\begin{itemize}
+    \item Evaluate the implicit function at all 8 corners.
+    \item If signs differ (some positive/outside, some negative/inside), the surface passes through this cell.
+    \item Interpolate along the edges to find the exact zero-crossing points.
+    \item Look up a pre-defined table to generate the triangles connecting those intersection points.
+\end{itemize}
+
+% Q5
+\section*{Question 5: Reconstruction}
+
+\paragraph{5a: Epipolar Constraint:}
+$$ \mathbf{x}'^{\!T} F \,\mathbf{x} = 0 $$
+where $\mathbf{x}$ is the point in Image~1, $\mathbf{x}'$ is the point in Image~2, and $F$ is the Fundamental Matrix.
+
+\paragraph{5b: Geometric Constraint:} The point $\mathbf{x}$ in Image~1 constrains the matching point in Image~2 to lie on a specific line called the \textbf{Epipolar Line} ($\mathbf{l}' = F\,\mathbf{x}$). This reduces the search from the full 2D image to a 1D line.
+
+\paragraph{5c: Camera Projection:}
+$$ \mathbf{x} = K \, [\,R \mid t\,] \, \mathbf{X} $$
+\begin{itemize}
+    \item \textbf{Intrinsic} $K$: $\begin{bmatrix} f_x & s & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix}$ (focal length, principal point, skew --- internal camera properties).
+    \item \textbf{Extrinsic} $[R \mid t]$: Rotation matrix and translation vector (camera pose in the world).
+\end{itemize}
+
+% Q6
+\section*{Question 6: Generative Models}
+
+\paragraph{6a: GANs produce sharper, higher-quality images.} Because the adversarial loss forces the Generator to create realistic high-frequency details to fool the Discriminator, whereas VAEs minimize pixel-wise MSE (L2) loss which tends to average out details, causing blurriness.
+
+\paragraph{6b: Diffusion Reverse Process.} The network learns to predict and remove the noise that was added at each step. Starting from pure random noise, it iteratively denoises the image over many timesteps to reconstruct a realistic sample.
+
+\paragraph{6c: Classifier-Free Guidance.} It allows flexible control over how strongly the generation follows a text/label prompt without needing a separate classifier model. Formula:
+$$ \hat{\epsilon} = \epsilon_u + w \cdot (\epsilon_c - \epsilon_u) $$
+where $\epsilon_c$ = prediction with conditioning, $\epsilon_u$ = prediction without conditioning, and $w$ = guidance scale.
+
+\paragraph{6d: Flow Models vs Diffusion.} Flow models define a deterministic \textbf{ODE trajectory} (velocity field) from noise to data. Diffusion models use a stochastic process. The direct ODE trajectory of Flow Matching typically requires fewer integration steps, making sampling more efficient.
+
+\end{document}

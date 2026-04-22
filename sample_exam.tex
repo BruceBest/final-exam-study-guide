@@ -1,117 +1,66 @@
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
-\usepackage{amssymb}
 \usepackage{geometry}
 \usepackage{enumitem}
-\usepackage{graphicx}
-\usepackage{xcolor}
 
 \geometry{a4paper, margin=1in}
 
-\title{\textbf{Computer Graphics Sample Final Exam}\\
-\large{Winter 2025-2026}}
-\author{Based on Lecture Slides \& Exam Prep Topics}
-\date{Time: 70 minutes}
-
-\pagestyle{empty}
+\title{\textbf{EECS 498/598-016 Computer Graphics Sample Final Exam}}
+\author{Based on Winter 2026 Lecture Content}
+\date{}
 
 \begin{document}
 \maketitle
-\noindent \textbf{Instructions:} Closed book, no notes. Conceptual answers only.
+\noindent \textbf{Instructions:} Closed book, 70 minutes. Answer all conceptual questions. \\
+\textbf{Name:} \underline{\hspace{8cm}} \textbf{Uniqname:} \underline{\hspace{3cm}}
 
-\section*{Question 1: Rasterization}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item Why do we use homogeneous coordinates for transformations in computer graphics? Provide one specific mathematical reason.\\
-   \vspace{1.5cm}
-   
-   \item When combining a rotation and a translation, explain why the order matters. Give a concrete example where $T \cdot R \neq R \cdot T$.\\
-   \vspace{2.5cm}
+\begin{enumerate}
+    \item \textbf{[Rasterization / Transformations]}
+    \\ Suppose you have a 2D triangle centered at the origin. You want to translate it 5 units right, then rotate it $90^\circ$ counter-clockwise about the origin.
+    \begin{enumerate}[label=\alph*.]
+        \item Write down the $3 \times 3$ homogeneous matrices $T$ (translation) and $R$ (rotation).
+        \item What is the combined matrix $M$? (Hint: order matters.)
+        \item Apply $M$ to the vertex $(0, 1)$. What are its final coordinates?
+    \end{enumerate}
+    \vspace{1cm}
 
-   \item How does the Z-buffer (Depth Buffer) resolve the visibility problem? What values does it store and update?\\
-   \vspace{2.5cm}
+    \item \textbf{[Ray Tracing]}
+    \\ When a ray hits a shiny glass surface, what secondary rays are spawned? Briefly explain the physical effect each one simulates.
+    \vspace{3cm}
 
-   \item Describe the difference between Bilinear filtering and Anisotropic filtering. In which viewing scenario is Anisotropic filtering most necessary?\\
-   \vspace{2.5cm}
-\end{enumerate}
+    \item \textbf{[Neural Fields / NeRF]}
+    \begin{enumerate}[label=\alph*.]
+        \item Why do standard MLPs struggle to learn high-frequency details? (Name the phenomenon.)
+        \item How does \textit{Positional Encoding} help?
+    \end{enumerate}
+    \vspace{2cm}
 
-\newpage
+    \item \textbf{[Geometry / Representations]}
+    \\ Compare a \textbf{Triangular Mesh} and an \textbf{Implicit Surface (e.g., SDF)}:
+    \begin{enumerate}[label=\alph*.]
+        \item Which makes Boolean union (merging two shapes) easier? Why?
+        \item Which is better for fast rasterization? Why?
+        \item Describe how \textit{Marching Cubes} converts an implicit surface into a mesh.
+    \end{enumerate}
+    \vspace{2cm}
 
-\section*{Question 2: Ray Tracing}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item Write down the Rendering Equation and explain the physical meaning of the integral term $\int_\Omega \dots d\omega_i$. Why is Monte Carlo sampling used to solve it?\\
-   \vspace{2.5cm}
-   
-   \item Explain the concept of Recursive Ray Tracing. What types of secondary rays are spawned at a surface intersection point?\\
-   \vspace{2.5cm}
+    \item \textbf{[Reconstruction]}
+    \begin{enumerate}[label=\alph*.]
+        \item Write the Epipolar Constraint.
+        \item Given a point $\mathbf{x}$ in Image~1, what does it constrain in Image~2?
+        \item Write the Camera Projection equation (3D world $\mathbf{X} \rightarrow$ 2D pixel $\mathbf{x}$) and label the Intrinsic and Extrinsic parameters.
+    \end{enumerate}
+    \vspace{2cm}
 
-   \item Why is a Bounding Volume Hierarchy (BVH) faster than checking every triangle for ray intersection? Describe the traversal logic.\\
-   \vspace{2.5cm}
-
-   \item Define Radiance and Irradiance. What is the key difference in how they are defined relative to direction?\\
-   \vspace{2.5cm}
-\end{enumerate}
-
-\section*{Question 3: Neural Fields}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item List two advantages of Neural Implicit Representations (e.g., NeRF) compared to traditional discrete representations like Voxels or Point Clouds.\\
-   \vspace{2.5cm}
-   
-   \item What is Spectral Bias in MLPs? How does Positional Encoding help overcome this problem in NeRF?\\
-   \vspace{2.5cm}
-
-   \item In NeRF volume rendering, why do we predict density $\sigma$ instead of opacity $\alpha$? How are they related mathematically?\\
-   \vspace{2.5cm}
-
-   \item Explain how Importance Sampling is implemented in the original NeRF paper (Coarse vs Fine network).\\
-   \vspace{2.5cm}
-\end{enumerate}
-
-\newpage
-
-\section*{Question 4: Geometry}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item Contrast Implicit Surfaces (e.g., SDFs) with Parametric Surfaces (e.g., Bézier/Meshes). Which representation is better for checking if a point is inside/outside, and why?\\
-   \vspace{2.5cm}
-   
-   \item Describe the properties of Bézier Curves regarding control points. Does the curve always pass through all control points?\\
-   \vspace{2.5cm}
-
-   \item Explain how Marching Cubes converts an implicit surface to a mesh. What condition triggers triangle generation in a grid cell?\\
-   \vspace{3cm}
-\end{enumerate}
-
-\section*{Question 5: Reconstruction}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item Write the Camera Projection equation mapping a 3D point $X$ to a 2D pixel $x$. Identify which parameters are Intrinsic and which are Extrinsic.\\
-   \vspace{2.5cm}
-   
-   \item Explain the Epipolar Constraint. How does it simplify the correspondence search between two images?\\
-   \vspace{2.5cm}
-
-   \item What are the main limitations of Multi-View Stereo (MVS) algorithms? (Give two specific scenarios where MVS fails or struggles).\\
-   \vspace{2.5cm}
-\end{enumerate}
-
-\section*{Question 6: Generative Models}
-\vspace{0.5em}
-\begin{enumerate}[label=\alph*.]
-   \item Compare VAEs and GANs. What is the main advantage of GANs over VAEs regarding output quality?\\
-   \vspace{2.5cm}
-   
-   \item Explain the "Forward Process" and "Reverse Process" in Diffusion Models.\\
-   \vspace{2.5cm}
-
-   \item What is Classifier-Free Guidance? Write the formula combining conditional and unconditional noise predictions.\\
-   \vspace{2.5cm}
-
-   \item What is the fundamental difference between Diffusion Models and Flow Models (Flow Matching)?\\
-   \vspace{2.5cm}
+    \item \textbf{[Generative Models]}
+    \begin{enumerate}[label=\alph*.]
+        \item One advantage of GANs over VAEs for image generation.
+        \item What does the neural network learn during the Diffusion \textit{Reverse Process}?
+        \item Purpose of Classifier-Free Guidance and the formula.
+        \item How do Flow Models differ from Diffusion in generating samples?
+    \end{enumerate}
+    \vspace{2cm}
 \end{enumerate}
 
 \end{document}
